@@ -210,10 +210,10 @@ async function hasStagedChanges(cwd: string): Promise<boolean> {
 }
 
 async function releaseAndTap(tag: string): Promise<void> {
-	const repo = process.env.GITHUB_REPOSITORY;
+	const repo = process.env.GITHUB_REPOSITORY ?? "vehmloewff/interactor";
 	const tapRepo =
 		process.env.HOMEBREW_TAP_REPO ??
-		"git@github.com:Vehmloewff/homebrew-tap.git";
+		"git@github.com:vehmloewff/homebrew-tap.git";
 	const tapBranch = process.env.HOMEBREW_TAP_BRANCH ?? "master";
 
 	const assets = [
@@ -274,7 +274,7 @@ const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as {
 	version: string;
 };
 const tag = resolveReleaseTag(process.env.RELEASE_VERSION ?? pkg.version);
-const repoForFormula = process.env.GITHUB_REPOSITORY ?? "OWNER/REPO";
+const repoForFormula = process.env.GITHUB_REPOSITORY ?? "vehmloewff/interactor";
 
 await buildArtifacts(tag, repoForFormula);
 if (!noRelease) {
