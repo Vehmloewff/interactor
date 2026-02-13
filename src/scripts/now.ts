@@ -37,6 +37,16 @@ const targets: Target[] = [
 		bunTarget: "bun-linux-x64",
 		binaryName: "interactor",
 	},
+	{
+		label: "linux-arm64",
+		bunTarget: "bun-linux-arm64",
+		binaryName: "interactor",
+	},
+	{
+		label: "windows-x64",
+		bunTarget: "bun-windows-x64",
+		binaryName: "interactor.exe",
+	},
 ];
 
 const bunBuildExternals = [
@@ -152,8 +162,13 @@ async function buildArtifacts(tag: string, repo: string): Promise<void> {
   end
 
   on_linux do
-    url "https://github.com/${repo}/releases/download/${tag}/interactor-${tag}-linux-x64.tar.gz"
-    sha256 "${shaByLabel["linux-x64"] ?? "REPLACE_ME"}"
+    if Hardware::CPU.arm?
+      url "https://github.com/${repo}/releases/download/${tag}/interactor-${tag}-linux-arm64.tar.gz"
+      sha256 "${shaByLabel["linux-arm64"] ?? "REPLACE_ME"}"
+    else
+      url "https://github.com/${repo}/releases/download/${tag}/interactor-${tag}-linux-x64.tar.gz"
+      sha256 "${shaByLabel["linux-x64"] ?? "REPLACE_ME"}"
+    end
   end
 
   depends_on "oven-sh/bun/bun"
@@ -199,12 +214,14 @@ async function releaseAndTap(tag: string): Promise<void> {
 	const tapRepo =
 		process.env.HOMEBREW_TAP_REPO ??
 		"git@github.com:Vehmloewff/homebrew-tap.git";
-	const tapBranch = process.env.HOMEBREW_TAP_BRANCH ?? "main";
+	const tapBranch = process.env.HOMEBREW_TAP_BRANCH ?? "master";
 
 	const assets = [
 		`dist/interactor-${tag}-darwin-arm64.tar.gz`,
 		`dist/interactor-${tag}-darwin-x64.tar.gz`,
 		`dist/interactor-${tag}-linux-x64.tar.gz`,
+		`dist/interactor-${tag}-linux-arm64.tar.gz`,
+		`dist/interactor-${tag}-windows-x64.tar.gz`,
 		"dist/checksums.txt",
 	];
 
