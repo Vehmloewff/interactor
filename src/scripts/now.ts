@@ -69,6 +69,22 @@ async function run(command: string[], cwd = root): Promise<void> {
 	}
 }
 
+async function runCapture(
+	command: string[],
+	cwd = root,
+): Promise<{ code: number; stdout: string; stderr: string }> {
+	const proc = Bun.spawn(command, {
+		cwd,
+		stdio: ["ignore", "pipe", "pipe"],
+	});
+	const [code, stdout, stderr] = await Promise.all([
+		proc.exited,
+		new Response(proc.stdout).text(),
+		new Response(proc.stderr).text(),
+	]);
+	return { code, stdout, stderr };
+}
+
 async function sha256(path: string): Promise<string> {
 	const proc = Bun.spawn(["shasum", "-a", "256", path], {
 		stdio: ["ignore", "pipe", "inherit"],
@@ -200,6 +216,45 @@ async function releaseExists(tag: string, repo?: string): Promise<boolean> {
 	return code === 0;
 }
 
+function resolvePreviousTag(tags: string[], currentTag: string): string | undefined {
+	const filtered = tags.filter(Boolean);
+	const currentIndex = filtered.indexOf(currentTag);
+	if (currentIndex >= 0) return filtered[currentIndex + 1];
+	return filtered[0];
+}
+
+async function buildReleaseNotes(tag: string): Promise<string> {
+	const tagsResult = await runCapture(["git", "tag", "--sort=-creatordate"]);
+	if (tagsResult.code !== 0) {
+		throw new Error(`Failed to list git tags: ${tagsResult.stderr || tagsResult.stdout}`);
+	}
+
+	const tags = tagsResult.stdout
+		.split("\n")
+		.map((value) => value.trim())
+		.filter(Boolean);
+	const previousTag = resolvePreviousTag(tags, tag);
+
+	let logArgs: string[] = ["git", "log", "--pretty=format:- %h %s"];
+	if (previousTag) {
+		const currentExists = tags.includes(tag);
+		const range = currentExists ? `${previousTag}..${tag}` : `${previousTag}..HEAD`;
+		logArgs = [...logArgs, range];
+	}
+
+	const logResult = await runCapture(logArgs);
+	if (logResult.code !== 0) {
+		throw new Error(`Failed to build changelog: ${logResult.stderr || logResult.stdout}`);
+	}
+
+	const body = logResult.stdout.trim().length > 0 ? logResult.stdout.trim() : "- No changes found."
+	const header = previousTag
+		? `## Changelog (${previousTag} -> ${tag})`
+		: `## Changelog (${tag})`;
+
+	return `${header}\n\n${body}\n`;
+}
+
 async function hasStagedChanges(cwd: string): Promise<boolean> {
 	const proc = Bun.spawn(["git", "diff", "--cached", "--quiet"], {
 		cwd,
@@ -224,8 +279,15 @@ async function releaseAndTap(tag: string): Promise<void> {
 		`dist/interactor-${tag}-windows-x64.tar.gz`,
 		"dist/checksums.txt",
 	];
+	const notes = await buildReleaseNotes(tag);
+	const notesPath = join(distRoot, "release-notes.md");
+	await writeFile(notesPath, notes, "utf8");
 
 	if (await releaseExists(tag, repo)) {
+		const edit = ["gh", "release", "edit", tag, "--notes-file", notesPath];
+		if (repo) edit.push("--repo", repo);
+		await run(edit);
+
 		const upload = ["gh", "release", "upload", tag, ...assets, "--clobber"];
 		if (repo) upload.push("--repo", repo);
 		await run(upload);
@@ -239,7 +301,8 @@ async function releaseAndTap(tag: string): Promise<void> {
 			...assets,
 			"--title",
 			tag,
-			"--generate-notes",
+			"--notes-file",
+			notesPath,
 		];
 		if (repo) create.push("--repo", repo);
 		await run(create);
