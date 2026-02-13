@@ -187,8 +187,6 @@ async function buildArtifacts(tag: string, repo: string): Promise<void> {
     end
   end
 
-  depends_on "oven-sh/bun/bun"
-
   def install
     bin.install "interactor"
   end
@@ -216,7 +214,10 @@ async function releaseExists(tag: string, repo?: string): Promise<boolean> {
 	return code === 0;
 }
 
-function resolvePreviousTag(tags: string[], currentTag: string): string | undefined {
+function resolvePreviousTag(
+	tags: string[],
+	currentTag: string,
+): string | undefined {
 	const filtered = tags.filter(Boolean);
 	const currentIndex = filtered.indexOf(currentTag);
 	if (currentIndex >= 0) return filtered[currentIndex + 1];
@@ -226,7 +227,9 @@ function resolvePreviousTag(tags: string[], currentTag: string): string | undefi
 async function buildReleaseNotes(tag: string): Promise<string> {
 	const tagsResult = await runCapture(["git", "tag", "--sort=-creatordate"]);
 	if (tagsResult.code !== 0) {
-		throw new Error(`Failed to list git tags: ${tagsResult.stderr || tagsResult.stdout}`);
+		throw new Error(
+			`Failed to list git tags: ${tagsResult.stderr || tagsResult.stdout}`,
+		);
 	}
 
 	const tags = tagsResult.stdout
@@ -238,16 +241,23 @@ async function buildReleaseNotes(tag: string): Promise<string> {
 	let logArgs: string[] = ["git", "log", "--pretty=format:- %h %s"];
 	if (previousTag) {
 		const currentExists = tags.includes(tag);
-		const range = currentExists ? `${previousTag}..${tag}` : `${previousTag}..HEAD`;
+		const range = currentExists
+			? `${previousTag}..${tag}`
+			: `${previousTag}..HEAD`;
 		logArgs = [...logArgs, range];
 	}
 
 	const logResult = await runCapture(logArgs);
 	if (logResult.code !== 0) {
-		throw new Error(`Failed to build changelog: ${logResult.stderr || logResult.stdout}`);
+		throw new Error(
+			`Failed to build changelog: ${logResult.stderr || logResult.stdout}`,
+		);
 	}
 
-	const body = logResult.stdout.trim().length > 0 ? logResult.stdout.trim() : "- No changes found."
+	const body =
+		logResult.stdout.trim().length > 0
+			? logResult.stdout.trim()
+			: "- No changes found.";
 	const header = previousTag
 		? `## Changelog (${previousTag} -> ${tag})`
 		: `## Changelog (${tag})`;
