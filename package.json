@@ -1,6 +1,6 @@
 {
 	"name": "interactor",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "CLI for controlling and inspecting live browser sessions from scripts, terminals, and agent workflows",
 	"type": "module",
 	"license": "MIT",
