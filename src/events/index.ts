@@ -1,5 +1,5 @@
-import type { Schema } from '~/data-modeler'
-import { Err } from '~/utils'
+import { z } from 'zod'
+import { Err } from '../utils'
 
 import type { InteractorEventDefinition } from './define-event'
 import type { EventRunCx } from './define-event'
@@ -28,10 +28,10 @@ export function getInteractorEvent(name: string) {
 	return interactorEventMap.get(name)
 }
 
-export function getInteractorEventSchema(name: string): Schema | null {
+export function getInteractorEventSchema(name: string): Record<string, unknown> | null {
 	const event = getInteractorEvent(name)
 	if (event === undefined) return null
-	return event.inputModel.getSchema()
+	return z.toJSONSchema(event.inputModel) as Record<string, unknown>
 }
 
 export async function validateInteractorEventInputByName(name: string, input: unknown): Promise<unknown> {
@@ -40,7 +40,7 @@ export async function validateInteractorEventInputByName(name: string, input: un
 		throw new Err(`Unknown interactor event "${name}"`).expose()
 	}
 
-	return await event.inputModel.validate(input)
+	return await event.inputModel.parseAsync(input)
 }
 
 export async function executeInteractorEvent(cx: EventRunCx, eventName: string, input: unknown): Promise<unknown> {
@@ -49,7 +49,7 @@ export async function executeInteractorEvent(cx: EventRunCx, eventName: string, 
 		throw new Err(`Unknown interactor event "${eventName}"`).expose()
 	}
 
-	const validatedInput = await event.inputModel.validate(input)
+	const validatedInput = await event.inputModel.parseAsync(input)
 	return await event.run(cx, validatedInput)
 }
 

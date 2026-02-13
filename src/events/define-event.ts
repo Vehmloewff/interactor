@@ -1,4 +1,4 @@
-import type { Infer, M } from '~/data-modeler'
+import { type ZodType } from 'zod'
 import type { Browser, BrowserContext, Page } from 'playwright'
 
 export type InteractorConsoleEntry = {
@@ -34,15 +34,15 @@ export type InteractorEventDefinition<Name extends string = string, Input = any>
 	name: Name
 	description: string
 	keywords: string[]
-	inputModel: M<Input>
+	inputModel: ZodType<Input>
 	run: (cx: EventRunCx, input: Input) => Promise<unknown>
 }
 
 export function defineEvent<Name extends string, Input>(
 	name: Name,
 	description: string,
-	inputModel: M<Input>,
-	run: (cx: EventRunCx, input: Infer<M<Input>>) => Promise<unknown>,
+	inputModel: ZodType<Input>,
+	run: (cx: EventRunCx, input: Input) => Promise<unknown>,
 	keywords: string[] = []
 ): InteractorEventDefinition<Name, Input> {
 	return {

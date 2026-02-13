@@ -1,7 +1,7 @@
-import { M } from '~/data-modeler'
-import { Err } from '~/utils'
+import { z } from 'zod'
+import { Err } from '../utils'
 
-export const timeoutMsOptionalModel = M.number().min(0).optional().comment('Optional timeout in milliseconds')
+export const timeoutMsOptionalModel = z.number().min(0).optional().describe('Optional timeout in milliseconds')
 
 export function parseJsonObject(value: string | undefined, field: string): Record<string, unknown> | undefined {
 	if (value === undefined) return undefined

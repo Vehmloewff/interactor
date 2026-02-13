@@ -1,4 +1,4 @@
-import { M } from '~/data-modeler'
+import { z } from 'zod'
 
 import { defineEvent } from './define-event'
 import { sanitizeForTransport } from './method-utils'
@@ -22,14 +22,14 @@ export const browserEvents = [
 	defineEvent(
 		'browser.browserType',
 		'Get browser type details',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => sanitizeForTransport(browser.browserType()),
 		['browser', 'type']
 	),
 	defineEvent(
 		'browser.close',
 		'Close the browser',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => {
 			await browser.close()
 			return { closed: true }
@@ -39,21 +39,21 @@ export const browserEvents = [
 	defineEvent(
 		'browser.contexts',
 		'List browser contexts',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => browser.contexts().map((_, index) => ({ index })),
 		['contexts']
 	),
 	defineEvent(
 		'browser.isConnected',
 		'Check whether browser connection is active',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => browser.isConnected(),
 		['browser', 'status']
 	),
 	defineEvent(
 		'browser.newContext',
 		'Create a new browser context',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => {
 			await browser.newContext()
 			return { created: true }
@@ -63,7 +63,7 @@ export const browserEvents = [
 	defineEvent(
 		'browser.newPage',
 		'Create a new browser page',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => {
 			const page = await browser.newPage()
 			return { url: page.url() }
@@ -73,7 +73,7 @@ export const browserEvents = [
 	defineEvent(
 		'browser.version',
 		'Get browser version string',
-		M.object({}),
+		z.object({}),
 		async ({ browser }) => browser.version(),
 		['browser', 'version']
 	),

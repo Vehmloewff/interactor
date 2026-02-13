@@ -1,4 +1,4 @@
-import { M } from '~/data-modeler'
+import { z } from 'zod'
 
 import { defineEvent } from './define-event'
 import { parseJsonArray, parseJsonObject, timeoutMsOptionalModel } from './method-utils'
@@ -34,8 +34,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.check',
 		'Check a checkbox/radio input matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -47,10 +47,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.click',
 		'Click an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			button: M.union([M.lit('left'), M.lit('middle'), M.lit('right')]).optional().comment('Optional mouse button'),
-			clickCount: M.number().min(1).optional().comment('Optional click count'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			button: z.union([z.literal('left'), z.literal('middle'), z.literal('right')]).optional().describe('Optional mouse button'),
+			clickCount: z.number().min(1).optional().describe('Optional click count'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -66,8 +66,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.count',
 		'Count elements matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => await page.locator(input.selector).count(),
 		['locator', 'count']
@@ -75,9 +75,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.dblclick',
 		'Double-click an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			button: M.union([M.lit('left'), M.lit('middle'), M.lit('right')]).optional().comment('Optional mouse button'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			button: z.union([z.literal('left'), z.literal('middle'), z.literal('right')]).optional().describe('Optional mouse button'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -92,9 +92,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.fill',
 		'Fill an input matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			value: M.string().comment('Text value to set'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			value: z.string().describe('Text value to set'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -106,10 +106,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.filter',
 		'Apply text-based filter to locator and return summary',
-		M.object({
-			selector: M.string().min(1).comment('Base selector for locator'),
-			hasText: M.string().optional().comment('Optional text that matched elements must contain'),
-			hasNotText: M.string().optional().comment('Optional text that matched elements must not contain'),
+		z.object({
+			selector: z.string().min(1).describe('Base selector for locator'),
+			hasText: z.string().optional().describe('Optional text that matched elements must contain'),
+			hasNotText: z.string().optional().describe('Optional text that matched elements must not contain'),
 		}),
 		async ({ page }, input) => {
 			const filtered = page.locator(input.selector).filter({
@@ -123,8 +123,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.focus',
 		'Focus an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -136,9 +136,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.getAttribute',
 		'Read an attribute from an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			attribute: M.string().min(1).comment('Attribute name'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			attribute: z.string().min(1).describe('Attribute name'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).getAttribute(input.attribute, { timeout: input.timeoutMs }),
@@ -147,8 +147,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.hover',
 		'Hover an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -160,8 +160,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.innerHTML',
 		'Get innerHTML from an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).innerHTML({ timeout: input.timeoutMs }),
@@ -170,8 +170,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.innerText',
 		'Get innerText from an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).innerText({ timeout: input.timeoutMs }),
@@ -180,8 +180,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.inputValue',
 		'Get input value from an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).inputValue({ timeout: input.timeoutMs }),
@@ -190,8 +190,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isChecked',
 		'Check checked state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isChecked({ timeout: input.timeoutMs }),
@@ -200,8 +200,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isDisabled',
 		'Check disabled state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isDisabled({ timeout: input.timeoutMs }),
@@ -210,8 +210,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isEditable',
 		'Check editable state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isEditable({ timeout: input.timeoutMs }),
@@ -220,8 +220,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isEnabled',
 		'Check enabled state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isEnabled({ timeout: input.timeoutMs }),
@@ -230,8 +230,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isHidden',
 		'Check hidden state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isHidden({ timeout: input.timeoutMs }),
@@ -240,8 +240,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.isVisible',
 		'Check visible state for an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).isVisible({ timeout: input.timeoutMs }),
@@ -250,10 +250,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.press',
 		'Press a keyboard key on an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			key: M.string().min(1).comment('Keyboard key name'),
-			delayMs: M.number().min(0).optional().comment('Optional key press delay in milliseconds'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			key: z.string().min(1).describe('Keyboard key name'),
+			delayMs: z.number().min(0).optional().describe('Optional key press delay in milliseconds'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -265,10 +265,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.pressSequentially',
 		'Type text sequentially on an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			text: M.string().comment('Text to type sequentially'),
-			delayMs: M.number().min(0).optional().comment('Optional delay between keystrokes'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			text: z.string().describe('Text to type sequentially'),
+			delayMs: z.number().min(0).optional().describe('Optional delay between keystrokes'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -280,9 +280,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.screenshot',
 		'Capture screenshot of an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			path: M.string().optional().comment('Optional output image path'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			path: z.string().optional().describe('Optional output image path'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -294,9 +294,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.selectOption',
 		'Select option values in an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			valuesJson: M.string().comment('JSON array of option values to select'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			valuesJson: z.string().describe('JSON array of option values to select'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -308,9 +308,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.setChecked',
 		'Set checked state for a checkbox/radio matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			checked: M.boolean().comment('Desired checked state'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			checked: z.boolean().describe('Desired checked state'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -322,9 +322,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.setInputFiles',
 		'Upload files using a file input matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			pathsJson: M.string().comment('JSON array of file path strings'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			pathsJson: z.string().describe('JSON array of file path strings'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -337,8 +337,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.tap',
 		'Tap an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -350,8 +350,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.textContent',
 		'Get textContent from an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).textContent({ timeout: input.timeoutMs }),
@@ -360,10 +360,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.type',
 		'Type text into an element matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			text: M.string().comment('Text to type'),
-			delayMs: M.number().min(0).optional().comment('Optional delay between keystrokes'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			text: z.string().describe('Text to type'),
+			delayMs: z.number().min(0).optional().describe('Optional delay between keystrokes'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -375,8 +375,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.uncheck',
 		'Uncheck a checkbox matched by locator',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -388,8 +388,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.allInnerTexts',
 		'Get innerText for all elements matching selector',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => await page.locator(input.selector).allInnerTexts(),
 		['locator', 'text']
@@ -397,8 +397,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.allTextContents',
 		'Get textContent values for all elements matching selector',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => await page.locator(input.selector).allTextContents(),
 		['locator', 'text']
@@ -406,8 +406,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.ariaSnapshot',
 		'Get ARIA snapshot for an element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => await page.locator(input.selector).ariaSnapshot(),
 		['locator', 'aria']
@@ -415,8 +415,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.blur',
 		'Blur the focused state of an element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => {
 			await page.locator(input.selector).blur()
@@ -427,8 +427,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.boundingBox',
 		'Get element bounding box for selector',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).boundingBox({ timeout: input.timeoutMs }),
@@ -437,8 +437,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.clear',
 		'Clear text from an input-like element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -450,10 +450,10 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.dispatchEvent',
 		'Dispatch a DOM event on a locator element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			type: M.string().min(1).comment('DOM event type'),
-			eventInitJson: M.string().optional().comment('Optional JSON object for event init payload'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			type: z.string().min(1).describe('DOM event type'),
+			eventInitJson: z.string().optional().describe('Optional JSON object for event init payload'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -466,9 +466,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.dragTo',
 		'Drag one locator element to another locator element',
-		M.object({
-			sourceSelector: M.string().min(1).comment('Source selector'),
-			targetSelector: M.string().min(1).comment('Target selector'),
+		z.object({
+			sourceSelector: z.string().min(1).describe('Source selector'),
+			targetSelector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -480,8 +480,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.highlight',
 		'Temporarily highlight locator element in inspector',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 		}),
 		async ({ page }, input) => {
 			await page.locator(input.selector).highlight()
@@ -492,8 +492,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.scrollIntoViewIfNeeded',
 		'Scroll locator element into view when needed',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -505,8 +505,8 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.selectText',
 		'Select text content inside a locator element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -518,9 +518,9 @@ export const locatorEvents = [
 	defineEvent(
 		'locator.waitFor',
 		'Wait for locator element state',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for locator'),
-			state: M.union([M.lit('attached'), M.lit('detached'), M.lit('hidden'), M.lit('visible')]).optional().comment('Desired locator state'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for locator'),
+			state: z.union([z.literal('attached'), z.literal('detached'), z.literal('hidden'), z.literal('visible')]).optional().describe('Desired locator state'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {

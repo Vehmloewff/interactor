@@ -3,7 +3,7 @@ import net from 'node:net'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import { Err } from '~/utils'
+import { Err } from './utils'
 
 import {
 	interactorInfoModel,
@@ -114,7 +114,7 @@ async function listKnownInteractorsInScope(scope: Exclude<InteractorSocketScope,
 		const fullPath = join(interactorDir, metaName)
 		try {
 			const raw = await readFile(fullPath, 'utf8')
-			const parsed = await interactorInfoModel.validate(decodeJson(raw))
+			const parsed = await interactorInfoModel.parseAsync(decodeJson(raw))
 			interactors.push(parsed)
 		} catch {
 			continue
@@ -194,7 +194,7 @@ export async function createInteractorSocketServer(path: string, onRequest: (req
 				buffer = ''
 
 				try {
-					const parsed = await interactorRequestModel.validate(decodeJson(line))
+					const parsed = await interactorRequestModel.parseAsync(decodeJson(line))
 					const data = await onRequest(parsed)
 
 					const response: InteractorResponse = {
@@ -246,7 +246,7 @@ export async function requestInteractor(path: string, request: InteractorRequest
 
 			void (async () => {
 				try {
-					const parsed = await interactorResponseModel.validate(decodeJson(line))
+					const parsed = await interactorResponseModel.parseAsync(decodeJson(line))
 					resolve(parsed)
 				} catch (error) {
 					reject(error)

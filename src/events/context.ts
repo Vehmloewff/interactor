@@ -1,4 +1,4 @@
-import { M } from '~/data-modeler'
+import { z } from 'zod'
 
 import { defineEvent } from './define-event'
 import { parseJsonArray, parseJsonObject, sanitizeForTransport, timeoutMsOptionalModel } from './method-utils'
@@ -31,8 +31,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.addCookies',
 		'Add cookies to the browser context',
-		M.object({
-			cookiesJson: M.string().comment('JSON array of Playwright cookie objects'),
+		z.object({
+			cookiesJson: z.string().describe('JSON array of Playwright cookie objects'),
 		}),
 		async ({ context }, input) => {
 			const cookies = parseJsonArray(input.cookiesJson, 'cookiesJson') ?? []
@@ -44,7 +44,7 @@ export const contextEvents = [
 	defineEvent(
 		'context.clearCookies',
 		'Clear cookies for the browser context',
-		M.object({}),
+		z.object({}),
 		async ({ context }) => {
 			await context.clearCookies()
 			return { cleared: true }
@@ -54,7 +54,7 @@ export const contextEvents = [
 	defineEvent(
 		'context.clearPermissions',
 		'Clear all granted permissions in the browser context',
-		M.object({}),
+		z.object({}),
 		async ({ context }) => {
 			await context.clearPermissions()
 			return { cleared: true }
@@ -64,7 +64,7 @@ export const contextEvents = [
 	defineEvent(
 		'context.close',
 		'Close the browser context',
-		M.object({}),
+		z.object({}),
 		async ({ context }) => {
 			await context.close()
 			return { closed: true }
@@ -74,8 +74,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.cookies',
 		'Read cookies from the browser context',
-		M.object({
-			urlsJson: M.string().optional().comment('Optional JSON array of URL strings to filter cookies'),
+		z.object({
+			urlsJson: z.string().optional().describe('Optional JSON array of URL strings to filter cookies'),
 		}),
 		async ({ context }, input) => {
 			const urls = parseJsonArray(input.urlsJson, 'urlsJson') as string[] | undefined
@@ -86,9 +86,9 @@ export const contextEvents = [
 	defineEvent(
 		'context.grantPermissions',
 		'Grant browser permissions for the context',
-		M.object({
-			permissionsJson: M.string().comment('JSON array of permission strings'),
-			origin: M.string().optional().comment('Optional origin URL'),
+		z.object({
+			permissionsJson: z.string().describe('JSON array of permission strings'),
+			origin: z.string().optional().describe('Optional origin URL'),
 		}),
 		async ({ context }, input) => {
 			const permissions = parseJsonArray(input.permissionsJson, 'permissionsJson') as string[]
@@ -100,7 +100,7 @@ export const contextEvents = [
 	defineEvent(
 		'context.newPage',
 		'Create a new page in this browser context',
-		M.object({}),
+		z.object({}),
 		async ({ context }) => {
 			const page = await context.newPage()
 			return { url: page.url() }
@@ -110,15 +110,15 @@ export const contextEvents = [
 	defineEvent(
 		'context.pages',
 		'List current pages in this browser context',
-		M.object({}),
+		z.object({}),
 		async ({ context }) => context.pages().map(page => ({ url: page.url(), isClosed: page.isClosed() })),
 		['pages']
 	),
 	defineEvent(
 		'context.setDefaultNavigationTimeout',
 		'Set default navigation timeout for this context',
-		M.object({
-			timeoutMs: M.number().min(0).comment('Timeout in milliseconds'),
+		z.object({
+			timeoutMs: z.number().min(0).describe('Timeout in milliseconds'),
 		}),
 		async ({ context }, input) => {
 			context.setDefaultNavigationTimeout(input.timeoutMs)
@@ -129,8 +129,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.setDefaultTimeout',
 		'Set default timeout for this context',
-		M.object({
-			timeoutMs: M.number().min(0).comment('Timeout in milliseconds'),
+		z.object({
+			timeoutMs: z.number().min(0).describe('Timeout in milliseconds'),
 		}),
 		async ({ context }, input) => {
 			context.setDefaultTimeout(input.timeoutMs)
@@ -141,8 +141,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.setExtraHTTPHeaders',
 		'Set extra HTTP headers for all context requests',
-		M.object({
-			headersJson: M.string().comment('JSON object map of header names to values'),
+		z.object({
+			headersJson: z.string().describe('JSON object map of header names to values'),
 		}),
 		async ({ context }, input) => {
 			const headers = parseJsonObject(input.headersJson, 'headersJson') ?? {}
@@ -154,10 +154,10 @@ export const contextEvents = [
 	defineEvent(
 		'context.setGeolocation',
 		'Set geolocation for context pages',
-		M.object({
-			latitude: M.number().comment('Latitude'),
-			longitude: M.number().comment('Longitude'),
-			accuracy: M.number().min(0).optional().comment('Optional accuracy in meters'),
+		z.object({
+			latitude: z.number().describe('Latitude'),
+			longitude: z.number().describe('Longitude'),
+			accuracy: z.number().min(0).optional().describe('Optional accuracy in meters'),
 		}),
 		async ({ context }, input) => {
 			await context.setGeolocation({
@@ -172,9 +172,9 @@ export const contextEvents = [
 	defineEvent(
 		'context.setHTTPCredentials',
 		'Set HTTP authentication credentials for context requests',
-		M.object({
-			username: M.string().comment('HTTP auth username'),
-			password: M.string().comment('HTTP auth password'),
+		z.object({
+			username: z.string().describe('HTTP auth username'),
+			password: z.string().describe('HTTP auth password'),
 		}),
 		async ({ context }, input) => {
 			await context.setHTTPCredentials({ username: input.username, password: input.password })
@@ -185,8 +185,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.setOffline',
 		'Enable or disable offline network mode',
-		M.object({
-			offline: M.boolean().comment('When true, context operates in offline mode'),
+		z.object({
+			offline: z.boolean().describe('When true, context operates in offline mode'),
 		}),
 		async ({ context }, input) => {
 			await context.setOffline(input.offline)
@@ -197,8 +197,8 @@ export const contextEvents = [
 	defineEvent(
 		'context.storageState',
 		'Read or write storage state snapshot',
-		M.object({
-			path: M.string().optional().comment('Optional path to write storage state JSON'),
+		z.object({
+			path: z.string().optional().describe('Optional path to write storage state JSON'),
 		}),
 		async ({ context }, input) => sanitizeForTransport(await context.storageState({ path: input.path })),
 		['storage', 'state']

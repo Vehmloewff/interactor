@@ -1,7 +1,8 @@
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { chromium } from 'playwright'
 
-import { Err } from '~/utils'
+import { installPlaywrightBrowsers } from './playwright-install'
+import { Err } from './utils'
 
 import { executeInteractorEvent, INTERACTOR_EVENT_DEFINITIONS } from './events'
 import type { InteractorRuntime } from './events/define-event'
@@ -71,7 +72,21 @@ async function handleExecuteRequest(
 }
 
 async function openBrowserPage(options: StartInteractorOptions): Promise<{ browser: Browser; context: BrowserContext; page: Page }> {
-	const browser = await chromium.launch({ headless: options.headless })
+	let browser: Browser
+	try {
+		browser = await chromium.launch({ headless: options.headless })
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error)
+		const missingBrowser =
+			message.includes('Executable doesn\'t exist') ||
+			message.includes('Please run the following command to download new browsers')
+
+		if (!missingBrowser) throw error
+
+		console.warn('Chromium runtime not found, installing automatically...')
+		await installPlaywrightBrowsers({ browsers: ['chromium'] })
+		browser = await chromium.launch({ headless: options.headless })
+	}
 	const context = await browser.newContext()
 	const page = await context.newPage()
 

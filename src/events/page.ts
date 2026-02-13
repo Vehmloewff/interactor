@@ -1,21 +1,21 @@
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { M } from '~/data-modeler'
-import { Err } from '~/utils'
+import { z } from 'zod'
+import { Err } from '../utils'
 
 import { defineEvent } from './define-event'
 
-const waitUntilModel = M.union([M.lit('commit'), M.lit('domcontentloaded'), M.lit('load'), M.lit('networkidle')])
+const waitUntilModel = z.union([z.literal('commit'), z.literal('domcontentloaded'), z.literal('load'), z.literal('networkidle')])
 	.optional()
-	.comment('Optional Playwright navigation lifecycle target')
-const mouseButtonModel = M.union([M.lit('left'), M.lit('middle'), M.lit('right')])
+	.describe('Optional Playwright navigation lifecycle target')
+const mouseButtonModel = z.union([z.literal('left'), z.literal('middle'), z.literal('right')])
 	.optional()
-	.comment('Optional mouse button to use for click interactions')
-const selectorModel = M.string().min(1).comment('Target selector used to find an element')
-const timeoutMsOptionalModel = M.number().min(0).optional().comment('Optional timeout in milliseconds')
-const delayMsOptionalModel = M.number().min(0).optional().comment('Optional delay in milliseconds')
-const clickCountOptionalModel = M.number().min(1).optional().comment('Optional number of clicks to perform')
+	.describe('Optional mouse button to use for click interactions')
+const selectorModel = z.string().min(1).describe('Target selector used to find an element')
+const timeoutMsOptionalModel = z.number().min(0).optional().describe('Optional timeout in milliseconds')
+const delayMsOptionalModel = z.number().min(0).optional().describe('Optional delay in milliseconds')
+const clickCountOptionalModel = z.number().min(1).optional().describe('Optional number of clicks to perform')
 
 function parseArgJson(argJson: string | undefined): unknown {
 	if (argJson === undefined) return undefined
@@ -80,10 +80,10 @@ const corePageEvents = [
 	defineEvent(
 		'page.goto',
 		'Navigate to a new URL',
-		M.object({
-			url: M.string().min(1).comment('Target URL to open in the page'),
-			timeoutMs: M.number().min(0).optional().comment('Optional navigation timeout in milliseconds'),
-			waitUntil: waitUntilModel.comment('Optional Playwright waitUntil lifecycle target'),
+		z.object({
+			url: z.string().min(1).describe('Target URL to open in the page'),
+			timeoutMs: z.number().min(0).optional().describe('Optional navigation timeout in milliseconds'),
+			waitUntil: waitUntilModel.describe('Optional Playwright waitUntil lifecycle target'),
 		}),
 		async ({ page }, input) => {
 			await page.goto(input.url, { timeout: input.timeoutMs, waitUntil: input.waitUntil })
@@ -94,9 +94,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.reload',
 		'Reload the current page',
-		M.object({
-			timeoutMs: M.number().min(0).optional().comment('Optional reload timeout in milliseconds'),
-			waitUntil: waitUntilModel.comment('Optional Playwright waitUntil lifecycle target'),
+		z.object({
+			timeoutMs: z.number().min(0).optional().describe('Optional reload timeout in milliseconds'),
+			waitUntil: waitUntilModel.describe('Optional Playwright waitUntil lifecycle target'),
 		}),
 		async ({ page }, input) => {
 			await page.reload({ timeout: input.timeoutMs, waitUntil: input.waitUntil })
@@ -107,7 +107,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.goBack',
 		'Navigate back in history',
-		M.object({
+		z.object({
 			timeoutMs: timeoutMsOptionalModel,
 			waitUntil: waitUntilModel,
 		}),
@@ -120,7 +120,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.goForward',
 		'Navigate forward in history',
-		M.object({
+		z.object({
 			timeoutMs: timeoutMsOptionalModel,
 			waitUntil: waitUntilModel,
 		}),
@@ -133,12 +133,12 @@ const corePageEvents = [
 	defineEvent(
 		'page.click',
 		'Click a page element',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			button: mouseButtonModel,
 			clickCount: clickCountOptionalModel,
 			timeoutMs: timeoutMsOptionalModel,
-		}).displayLabel('selector'),
+		}),
 		async ({ page }, input) => {
 			await page.click(input.selector, { button: input.button, clickCount: input.clickCount, timeout: input.timeoutMs })
 			return { clicked: true }
@@ -148,11 +148,11 @@ const corePageEvents = [
 	defineEvent(
 		'page.dblclick',
 		'Double-click a page element',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			button: mouseButtonModel,
 			timeoutMs: timeoutMsOptionalModel,
-		}).displayLabel('selector'),
+		}),
 		async ({ page }, input) => {
 			await page.dblclick(input.selector, { button: input.button, timeout: input.timeoutMs })
 			return { clicked: true }
@@ -162,11 +162,11 @@ const corePageEvents = [
 	defineEvent(
 		'page.fill',
 		'Fill an input element',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			value: M.string().comment('Text value to set in the target input element'),
+			value: z.string().describe('Text value to set in the target input element'),
 			timeoutMs: timeoutMsOptionalModel,
-		}).displayLabel('selector'),
+		}),
 		async ({ page }, input) => {
 			await page.fill(input.selector, input.value, { timeout: input.timeoutMs })
 			return { filled: true }
@@ -176,12 +176,12 @@ const corePageEvents = [
 	defineEvent(
 		'page.type',
 		'Type text into an element',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			text: M.string().comment('Text to type into the element'),
+			text: z.string().describe('Text to type into the element'),
 			delayMs: delayMsOptionalModel,
 			timeoutMs: timeoutMsOptionalModel,
-		}).displayLabel('selector'),
+		}),
 		async ({ page }, input) => {
 			await page.type(input.selector, input.text, { delay: input.delayMs, timeout: input.timeoutMs })
 			return { typed: true }
@@ -191,12 +191,12 @@ const corePageEvents = [
 	defineEvent(
 		'page.press',
 		'Press a key on an element',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			key: M.string().min(1).comment('Keyboard key name, for example Enter or ArrowDown'),
+			key: z.string().min(1).describe('Keyboard key name, for example Enter or ArrowDown'),
 			delayMs: delayMsOptionalModel,
 			timeoutMs: timeoutMsOptionalModel,
-		}).displayLabel('selector'),
+		}),
 		async ({ page }, input) => {
 			await page.press(input.selector, input.key, { delay: input.delayMs, timeout: input.timeoutMs })
 			return { pressed: true }
@@ -206,7 +206,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.focus',
 		'Focus an element',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -219,7 +219,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.hover',
 		'Hover over an element',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -232,7 +232,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.check',
 		'Check a checkbox/radio input',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -245,7 +245,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.uncheck',
 		'Uncheck a checkbox input',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -258,9 +258,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.selectOption',
 		'Select option values in a select element',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			values: M.array(M.string().min(1)).min(1).comment('Option values to select'),
+			values: z.array(z.string().min(1)).min(1).describe('Option values to select'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -272,9 +272,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.setInputFiles',
 		'Attach files to an input[type=file]',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			paths: M.array(M.string().min(1)).min(1).comment('Absolute or relative file paths to upload'),
+			paths: z.array(z.string().min(1)).min(1).describe('Absolute or relative file paths to upload'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -286,9 +286,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.mouse.click',
 		'Click at page coordinates',
-		M.object({
-			x: M.number().comment('Horizontal click coordinate in CSS pixels'),
-			y: M.number().comment('Vertical click coordinate in CSS pixels'),
+		z.object({
+			x: z.number().describe('Horizontal click coordinate in CSS pixels'),
+			y: z.number().describe('Vertical click coordinate in CSS pixels'),
 			button: mouseButtonModel,
 			clickCount: clickCountOptionalModel,
 			delayMs: delayMsOptionalModel,
@@ -306,8 +306,8 @@ const corePageEvents = [
 	defineEvent(
 		'page.keyboard.type',
 		'Type via page keyboard',
-		M.object({
-			text: M.string().comment('Text to type with page.keyboard'),
+		z.object({
+			text: z.string().describe('Text to type with page.keyboard'),
 			delayMs: delayMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -319,8 +319,8 @@ const corePageEvents = [
 	defineEvent(
 		'page.keyboard.press',
 		'Press a key via page keyboard',
-		M.object({
-			key: M.string().min(1).comment('Keyboard key name, for example Enter'),
+		z.object({
+			key: z.string().min(1).describe('Keyboard key name, for example Enter'),
 			delayMs: delayMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -332,10 +332,10 @@ const corePageEvents = [
 	defineEvent(
 		'page.waitForSelector',
 		'Wait for selector state',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
-			state: M.union([M.lit('attached'), M.lit('detached'), M.lit('hidden'), M.lit('visible')]).optional().comment('Desired selector state before resolving'),
+			state: z.union([z.literal('attached'), z.literal('detached'), z.literal('hidden'), z.literal('visible')]).optional().describe('Desired selector state before resolving'),
 		}),
 		async ({ page }, input) => {
 			await page.waitForSelector(input.selector, { timeout: input.timeoutMs, state: input.state })
@@ -346,8 +346,8 @@ const corePageEvents = [
 	defineEvent(
 		'page.waitForTimeout',
 		'Wait for a fixed timeout',
-		M.object({
-			timeoutMs: M.number().min(0).comment('Time to wait in milliseconds'),
+		z.object({
+			timeoutMs: z.number().min(0).describe('Time to wait in milliseconds'),
 		}),
 		async ({ page }, input) => {
 			await page.waitForTimeout(input.timeoutMs)
@@ -358,9 +358,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.setViewportSize',
 		'Set page viewport dimensions',
-		M.object({
-			width: M.number().min(1).comment('Viewport width in CSS pixels'),
-			height: M.number().min(1).comment('Viewport height in CSS pixels'),
+		z.object({
+			width: z.number().min(1).describe('Viewport width in CSS pixels'),
+			height: z.number().min(1).describe('Viewport height in CSS pixels'),
 		}),
 		async ({ page }, input) => {
 			await page.setViewportSize({ width: input.width, height: input.height })
@@ -371,10 +371,10 @@ const corePageEvents = [
 	defineEvent(
 		'page.screenshot',
 		'Capture screenshot of page or element',
-		M.object({
-			path: M.string().min(1).optional().comment('Optional output path, defaults to temp file when omitted'),
-			fullPage: M.boolean().optional().comment('When true, capture full scrollable page'),
-			selector: selectorModel.optional().comment('Optional selector for element screenshot instead of whole page'),
+		z.object({
+			path: z.string().min(1).optional().describe('Optional output path, defaults to temp file when omitted'),
+			fullPage: z.boolean().optional().describe('When true, capture full scrollable page'),
+			selector: selectorModel.optional().describe('Optional selector for element screenshot instead of whole page'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -394,28 +394,28 @@ const corePageEvents = [
 	defineEvent(
 		'page.content',
 		'Get current HTML content',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => await page.content(),
 		['html', 'content', 'dom']
 	),
 	defineEvent(
 		'page.title',
 		'Get current document title',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => await page.title(),
 		['title', 'meta']
 	),
 	defineEvent(
 		'page.url',
 		'Get current URL',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => page.url(),
 		['url', 'location']
 	),
 	defineEvent(
 		'page.textContent',
 		'Get textContent for selector',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -425,7 +425,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.innerText',
 		'Get innerText for selector',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -435,7 +435,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.innerHTML',
 		'Get innerHTML for selector',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -445,9 +445,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.getAttribute',
 		'Get attribute value from selector',
-		M.object({
+		z.object({
 			selector: selectorModel,
-			attribute: M.string().min(1).comment('Attribute name to read from the element'),
+			attribute: z.string().min(1).describe('Attribute name to read from the element'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.getAttribute(input.selector, input.attribute, { timeout: input.timeoutMs }),
@@ -456,7 +456,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.isVisible',
 		'Check element visibility',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -466,7 +466,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.isEnabled',
 		'Check element enabled state',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -476,7 +476,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.isChecked',
 		'Check checkbox/radio checked state',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -486,7 +486,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.count',
 		'Count elements matching selector',
-		M.object({
+		z.object({
 			selector: selectorModel,
 		}),
 		async ({ page }, input) => await page.locator(input.selector).count(),
@@ -495,7 +495,7 @@ const corePageEvents = [
 	defineEvent(
 		'page.boundingBox',
 		'Get element bounding box',
-		M.object({
+		z.object({
 			selector: selectorModel,
 			timeoutMs: timeoutMsOptionalModel,
 		}),
@@ -505,9 +505,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.evaluate',
 		'Evaluate JS expression in page context',
-		M.object({
-			expression: M.string().min(1).comment('JavaScript expression string that evaluates to a function body'),
-			argJson: M.string().optional().comment('Optional JSON argument passed to the expression as arg'),
+		z.object({
+			expression: z.string().min(1).describe('JavaScript expression string that evaluates to a function body'),
+			argJson: z.string().optional().describe('Optional JSON argument passed to the expression as arg'),
 		}),
 		async ({ page }, input) => {
 			const arg = parseArgJson(input.argJson)
@@ -520,10 +520,10 @@ const corePageEvents = [
 	defineEvent(
 		'page.console.list',
 		'Read captured browser console entries',
-		M.object({
-			type: M.string().optional().comment('Optional console type filter such as log, warn, or error'),
-			limit: M.number().min(1).optional().comment('Optional max number of messages to return'),
-			clear: M.boolean().optional().comment('When true, clear stored console entries after this read'),
+		z.object({
+			type: z.string().optional().describe('Optional console type filter such as log, warn, or error'),
+			limit: z.number().min(1).optional().describe('Optional max number of messages to return'),
+			clear: z.boolean().optional().describe('When true, clear stored console entries after this read'),
 		}),
 		async ({ runtime }, input) => {
 			let entries = runtime.consoleEntries
@@ -538,9 +538,9 @@ const corePageEvents = [
 	defineEvent(
 		'page.errors.list',
 		'Read captured page runtime errors',
-		M.object({
-			limit: M.number().min(1).optional().comment('Optional max number of errors to return'),
-			clear: M.boolean().optional().comment('When true, clear stored page errors after this read'),
+		z.object({
+			limit: z.number().min(1).optional().describe('Optional max number of errors to return'),
+			clear: z.boolean().optional().describe('When true, clear stored page errors after this read'),
 		}),
 		async ({ runtime }, input) => {
 			let entries = runtime.pageErrors
@@ -598,7 +598,7 @@ const pageMethodEvents = [
 defineEvent(
 		'page.bringToFront',
 		'Bring the page tab to the foreground',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => {
 			await page.bringToFront()
 			return { broughtToFront: true }
@@ -608,8 +608,8 @@ defineEvent(
 	defineEvent(
 		'page.close',
 		'Close the current page',
-		M.object({
-			runBeforeUnload: M.boolean().optional().comment('When true, run beforeunload handlers'),
+		z.object({
+			runBeforeUnload: z.boolean().optional().describe('When true, run beforeunload handlers'),
 		}),
 		async ({ page }, input) => {
 			await page.close({ runBeforeUnload: input.runBeforeUnload })
@@ -620,17 +620,17 @@ defineEvent(
 	defineEvent(
 		'page.consoleMessages',
 		'Read browser console messages from Playwright page API',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => sanitizeForTransport(await page.consoleMessages()),
 		['console', 'logs']
 	),
 	defineEvent(
 		'page.dispatchEvent',
 		'Dispatch a DOM event on an element',
-		M.object({
-			selector: M.string().min(1).comment('Target selector for the DOM event'),
-			type: M.string().min(1).comment('DOM event type such as click or input'),
-			eventInitJson: M.string().optional().comment('Optional JSON object for event init payload'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector for the DOM event'),
+			type: z.string().min(1).describe('DOM event type such as click or input'),
+			eventInitJson: z.string().optional().describe('Optional JSON object for event init payload'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -643,9 +643,9 @@ defineEvent(
 	defineEvent(
 		'page.dragAndDrop',
 		'Drag an element and drop it onto another element',
-		M.object({
-			sourceSelector: M.string().min(1).comment('Selector for source element'),
-			targetSelector: M.string().min(1).comment('Selector for target element'),
+		z.object({
+			sourceSelector: z.string().min(1).describe('Selector for source element'),
+			targetSelector: z.string().min(1).describe('Selector for target element'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -657,10 +657,10 @@ defineEvent(
 	defineEvent(
 		'page.emulateMedia',
 		'Emulate media settings such as color scheme or reduced motion',
-		M.object({
-			media: M.union([M.lit('screen'), M.lit('print'), M.lit('null')]).optional().comment('Media type or null'),
-			colorScheme: M.union([M.lit('light'), M.lit('dark'), M.lit('no-preference'), M.lit('null')]).optional().comment('Optional color scheme emulation'),
-			reducedMotion: M.union([M.lit('reduce'), M.lit('no-preference'), M.lit('null')]).optional().comment('Optional reduced-motion emulation'),
+		z.object({
+			media: z.union([z.literal('screen'), z.literal('print'), z.literal('null')]).optional().describe('Media type or null'),
+			colorScheme: z.union([z.literal('light'), z.literal('dark'), z.literal('no-preference'), z.literal('null')]).optional().describe('Optional color scheme emulation'),
+			reducedMotion: z.union([z.literal('reduce'), z.literal('no-preference'), z.literal('null')]).optional().describe('Optional reduced-motion emulation'),
 		}),
 		async ({ page }, input) => {
 			await page.emulateMedia({
@@ -675,11 +675,11 @@ defineEvent(
 	defineEvent(
 		'page.addScriptTag',
 		'Inject a script tag into the document',
-		M.object({
-			url: M.string().optional().comment('Optional script URL'),
-			path: M.string().optional().comment('Optional local file path to script'),
-			content: M.string().optional().comment('Optional inline script content'),
-			type: M.string().optional().comment('Optional script type attribute'),
+		z.object({
+			url: z.string().optional().describe('Optional script URL'),
+			path: z.string().optional().describe('Optional local file path to script'),
+			content: z.string().optional().describe('Optional inline script content'),
+			type: z.string().optional().describe('Optional script type attribute'),
 		}),
 		async ({ page }, input) => {
 			const element = await page.addScriptTag({
@@ -688,17 +688,17 @@ defineEvent(
 				content: input.content,
 				type: input.type,
 			})
-			return sanitizeForTransport(await element.evaluate(el => (el as Element).outerHTML))
+			return sanitizeForTransport(await element.evaluate(el => (el as { outerHTML?: string }).outerHTML))
 		},
 		['script', 'inject']
 	),
 	defineEvent(
 		'page.addStyleTag',
 		'Inject a style tag into the document',
-		M.object({
-			url: M.string().optional().comment('Optional stylesheet URL'),
-			path: M.string().optional().comment('Optional local file path to stylesheet'),
-			content: M.string().optional().comment('Optional inline stylesheet content'),
+		z.object({
+			url: z.string().optional().describe('Optional stylesheet URL'),
+			path: z.string().optional().describe('Optional local file path to stylesheet'),
+			content: z.string().optional().describe('Optional inline stylesheet content'),
 		}),
 		async ({ page }, input) => {
 			const element = await page.addStyleTag({
@@ -706,15 +706,15 @@ defineEvent(
 				path: input.path,
 				content: input.content,
 			})
-			return sanitizeForTransport(await element.evaluate(el => (el as Element).outerHTML))
+			return sanitizeForTransport(await element.evaluate(el => (el as { outerHTML?: string }).outerHTML))
 		},
 		['style', 'inject']
 	),
 	defineEvent(
 		'page.inputValue',
 		'Read current form input value for a selector',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.inputValue(input.selector, { timeout: input.timeoutMs }),
@@ -723,15 +723,15 @@ defineEvent(
 	defineEvent(
 		'page.isClosed',
 		'Check whether the page has been closed',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => page.isClosed(),
 		['page', 'status']
 	),
 	defineEvent(
 		'page.isDisabled',
 		'Check whether a form control is disabled',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.isDisabled(input.selector, { timeout: input.timeoutMs }),
@@ -740,8 +740,8 @@ defineEvent(
 	defineEvent(
 		'page.isEditable',
 		'Check whether an element is editable',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.isEditable(input.selector, { timeout: input.timeoutMs }),
@@ -750,8 +750,8 @@ defineEvent(
 	defineEvent(
 		'page.isHidden',
 		'Check whether an element is hidden',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => await page.isHidden(input.selector, { timeout: input.timeoutMs }),
@@ -760,14 +760,14 @@ defineEvent(
 	defineEvent(
 		'page.pageErrors',
 		'Read page runtime errors from Playwright page API',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => sanitizeForTransport(await page.pageErrors()),
 		['errors', 'runtime']
 	),
 	defineEvent(
 		'page.pause',
 		'Pause script execution in Playwright inspector',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => {
 			await page.pause()
 			return { paused: true }
@@ -777,11 +777,11 @@ defineEvent(
 	defineEvent(
 		'page.pdf',
 		'Generate a PDF snapshot of the page',
-		M.object({
-			path: M.string().optional().comment('Optional output path'),
-			format: M.string().optional().comment('Optional paper format such as A4'),
-			landscape: M.boolean().optional().comment('When true, use landscape orientation'),
-			printBackground: M.boolean().optional().comment('When true, include background graphics'),
+		z.object({
+			path: z.string().optional().describe('Optional output path'),
+			format: z.string().optional().describe('Optional paper format such as A4'),
+			landscape: z.boolean().optional().describe('When true, use landscape orientation'),
+			printBackground: z.boolean().optional().describe('When true, include background graphics'),
 		}),
 		async ({ page }, input) => {
 			const bytes = await page.pdf({
@@ -797,7 +797,7 @@ defineEvent(
 	defineEvent(
 		'page.requestGC',
 		'Trigger JavaScript garbage collection in the page',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => {
 			await page.requestGC()
 			return { requested: true }
@@ -807,16 +807,16 @@ defineEvent(
 	defineEvent(
 		'page.requests',
 		'Read tracked network requests from Playwright page API',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => sanitizeForTransport(await page.requests()),
 		['network', 'requests']
 	),
 	defineEvent(
 		'page.setChecked',
 		'Set checkbox/radio checked state',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
-			checked: M.boolean().comment('Desired checked state'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
+			checked: z.boolean().describe('Desired checked state'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -828,9 +828,9 @@ defineEvent(
 	defineEvent(
 		'page.setContent',
 		'Replace current page content with HTML',
-		M.object({
-			html: M.string().comment('HTML content to inject'),
-			waitUntil: M.union([M.lit('commit'), M.lit('domcontentloaded'), M.lit('load'), M.lit('networkidle')]).optional().comment('Optional lifecycle state to wait for'),
+		z.object({
+			html: z.string().describe('HTML content to inject'),
+			waitUntil: z.union([z.literal('commit'), z.literal('domcontentloaded'), z.literal('load'), z.literal('networkidle')]).optional().describe('Optional lifecycle state to wait for'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -842,8 +842,8 @@ defineEvent(
 	defineEvent(
 		'page.setDefaultNavigationTimeout',
 		'Set default navigation timeout for this page',
-		M.object({
-			timeoutMs: M.number().min(0).comment('Default navigation timeout in milliseconds'),
+		z.object({
+			timeoutMs: z.number().min(0).describe('Default navigation timeout in milliseconds'),
 		}),
 		async ({ page }, input) => {
 			page.setDefaultNavigationTimeout(input.timeoutMs)
@@ -854,8 +854,8 @@ defineEvent(
 	defineEvent(
 		'page.setDefaultTimeout',
 		'Set default timeout for this page',
-		M.object({
-			timeoutMs: M.number().min(0).comment('Default timeout in milliseconds'),
+		z.object({
+			timeoutMs: z.number().min(0).describe('Default timeout in milliseconds'),
 		}),
 		async ({ page }, input) => {
 			page.setDefaultTimeout(input.timeoutMs)
@@ -866,8 +866,8 @@ defineEvent(
 	defineEvent(
 		'page.setExtraHTTPHeaders',
 		'Set extra HTTP headers for page requests',
-		M.object({
-			headersJson: M.string().comment('JSON object map of header names to values'),
+		z.object({
+			headersJson: z.string().describe('JSON object map of header names to values'),
 		}),
 		async ({ page }, input) => {
 			const headers = parseJsonObject(input.headersJson, 'headersJson') ?? {}
@@ -879,8 +879,8 @@ defineEvent(
 	defineEvent(
 		'page.tap',
 		'Tap an element (touch emulation)',
-		M.object({
-			selector: M.string().min(1).comment('Target selector'),
+		z.object({
+			selector: z.string().min(1).describe('Target selector'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -892,15 +892,15 @@ defineEvent(
 	defineEvent(
 		'page.viewportSize',
 		'Get current viewport size',
-		M.object({}),
+		z.object({}),
 		async ({ page }) => page.viewportSize(),
 		['viewport', 'size']
 	),
 	defineEvent(
 		'page.waitForLoadState',
 		'Wait for a given load state',
-		M.object({
-			state: M.union([M.lit('domcontentloaded'), M.lit('load'), M.lit('networkidle')]).optional().comment('Optional target load state'),
+		z.object({
+			state: z.union([z.literal('domcontentloaded'), z.literal('load'), z.literal('networkidle')]).optional().describe('Optional target load state'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -912,9 +912,9 @@ defineEvent(
 	defineEvent(
 		'page.waitForNavigation',
 		'Wait for page navigation',
-		M.object({
-			url: M.string().optional().comment('Optional URL to match'),
-			waitUntil: M.union([M.lit('commit'), M.lit('domcontentloaded'), M.lit('load'), M.lit('networkidle')]).optional().comment('Optional lifecycle state to wait for'),
+		z.object({
+			url: z.string().optional().describe('Optional URL to match'),
+			waitUntil: z.union([z.literal('commit'), z.literal('domcontentloaded'), z.literal('load'), z.literal('networkidle')]).optional().describe('Optional lifecycle state to wait for'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
@@ -926,9 +926,9 @@ defineEvent(
 	defineEvent(
 		'page.waitForURL',
 		'Wait until page URL matches a pattern',
-		M.object({
-			url: M.string().min(1).comment('URL or URL pattern string'),
-			waitUntil: M.union([M.lit('commit'), M.lit('domcontentloaded'), M.lit('load'), M.lit('networkidle')]).optional().comment('Optional lifecycle state to wait for'),
+		z.object({
+			url: z.string().min(1).describe('URL or URL pattern string'),
+			waitUntil: z.union([z.literal('commit'), z.literal('domcontentloaded'), z.literal('load'), z.literal('networkidle')]).optional().describe('Optional lifecycle state to wait for'),
 			timeoutMs: timeoutMsOptionalModel,
 		}),
 		async ({ page }, input) => {
